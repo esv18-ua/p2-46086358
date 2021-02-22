@@ -1,6 +1,8 @@
+//DNI 46086358Q SABATER VILLORA, EVA 
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <string>
 
 using namespace std;
 
@@ -73,7 +75,21 @@ void showMainMenu(){
 }
 
 void editProject(Project &toDoList){
-}
+	
+	string nombre; //compruebo el string antes de almacenarlo con s
+	do{
+		cout<<"Enter project name: ";
+		getline(cin,nombre);
+		if (nombre.empty())
+			error(ERR_EMPTY);
+		else{
+			cout<<"enter description: " ;
+			getline(cin,toDoList.description);
+			toDoList.name=nombre;
+		}
+		
+	}while(nombre.empty());
+	
 
 void addList(Project &toDoList){
 }

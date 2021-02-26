@@ -103,7 +103,6 @@ void showMainMenu(){
 }
 
 void editProject(Project &toDoList){
-	
 	string nombre; //compruebo el string antes de almacenarlo con s
 	do{
 		cout<<"Enter project name: ";
@@ -120,9 +119,26 @@ void editProject(Project &toDoList){
 }
 
 void addList(Project &toDoList){
+	List lista;
+	do{
+		cout<<"Enter list name: ";
+		getline(cin,lista.name);
+		if(lista.name.empty())
+			error(ERR_EMPTY);
+		else {
+			for(unsigned i=0;i<toDoList.lists.size();i++){
+				if(toDoList.lists.at(i).name==lista.name)
+					error(ERR_LIST_NAME);
+				else
+					toDoList.lists.push_back(lista);
+			}
+		}
+		
+	}while(lista.name.empty());
 }
 
 void deleteList(Project &toDoList){
+	
 }
 
 void addTask(Project &toDoList){

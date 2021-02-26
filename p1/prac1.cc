@@ -62,6 +62,34 @@ void error(Error e){
   }
 }
 
+bool comprueboDate( Date fecha ){
+	bool verifico=true;
+	if (2000<=fecha.year && fecha.year<=2100){ //si el año esta entre 2000 y 2100
+				
+		if(fecha.month==2 ){ //si el mes es febrero compruebo si el año es bisiesto
+			if (fecha.year%4==0 && fecha.year%100==0 && fecha.year%400==0 && fecha.day>29) //es un año bisiesto
+				verifico=false;
+			else if (fecha.year%4!=0 && fecha.year%100!=0 && fecha.year%400!=0 && fecha.day>28)//no es un año bisiesto
+				verifico=false;
+		}
+	else {
+		
+			if(fecha.month%2==0 && fecha.month<8 && fecha.day>30) 
+				verifico=false;					
+			else if(fecha.month%2!=0 && fecha.month<8 && fecha.day>31) 
+				verifico=false;
+			else if (fecha.month%2==0 && fecha.month>=8 && fecha.day>31)
+				verifico=false;
+			else if (fecha.month%2!=0 && fecha.month>8 && fecha.day>30)
+				verifico=false;
+			}
+		}
+	else
+		verifico=false;
+			
+	return(verifico);
+}
+
 void showMainMenu(){
   cout << "1- Edit project" << endl
        << "2- Add list" << endl
@@ -89,7 +117,7 @@ void editProject(Project &toDoList){
 		}
 		
 	}while(nombre.empty());
-	
+}
 
 void addList(Project &toDoList){
 }
@@ -107,6 +135,10 @@ void toggleTask(Project &toDoList){
 }
 
 void report(const Project &toDoList){
+	cout<<"Name: "<<toDoList.name<<endl;
+	if (!toDoList.description.empty())
+		cout<<"Description: "<<toDoList.description<<endl;
+	//cout<<toDoList.lists.name<<endl;
 }
 
 int main(){

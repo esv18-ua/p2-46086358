@@ -62,6 +62,23 @@ void error(Error e){
   }
 }
 
+Date extraerFecha(Date fecha,string str_fecha){
+	size_t pos1=str_fecha.find_first_of("/");
+	size_t pos2=str_fecha.find_last_of("/");
+	size_t pos3=pos2-pos1;
+	string str_day=str_fecha.substr(0,pos1);
+	string str_month=str_fecha.substr(pos1+1,pos3-1);
+	string str_year=str_fecha.substr(pos2+1);
+	
+	fecha.day = stoi(str_day);
+	fecha.month = stoi(str_month);
+	fecha.year =stoi(str_year);
+	
+	
+	
+	return (fecha);
+}
+
 bool comprueboDate( Date fecha ){
 	bool verifico=true;
 	if (2000<=fecha.year && fecha.year<=2100){ //si el año esta entre 2000 y 2100
@@ -150,16 +167,43 @@ void deleteList(Project &toDoList){
 			toDoList.lists.erase(toDoList.lists.begin()+i);
 		else
 			error(ERR_LIST_NAME);
+		}
 	}
-}
 	}while(nombre.empty());
 }
 
 void addTask(Project &toDoList){
-	
+	string nombre,str_fecha;
+	Task tarea;
+	Date fecha;
+	do{
 	cout<<"Enter list name: ";
-	//getline(cin,
-	
+	getline(cin,nombre);
+	if(nombre.empty())
+		error(ERR_EMPTY);
+	else{
+		for(unsigned i=0;i<toDoList.lists.size();i++){
+		if(toDoList.lists[i].name==nombre){ //si encuentro la lista con el nombre
+			cout<<"Enter deadline: ";
+			getline(cin,str_fecha);
+			fecha = extraerFecha(fecha,str_fecha); //llamo a la funcion para extraer los datos
+			if(comprueboDate(fecha)) {
+			cout<<"Enter expected time: ";
+			cin>>tarea.time;
+			if(1<=tarea.time && tarea.time<=180)
+				toDoList.lists[i].tasks.push_back(tarea);
+			else
+				error(ERR_TIME);
+			}
+			else
+				error(ERR_DATE);
+			
+		}
+		else
+			error(ERR_LIST_NAME);
+		}
+	}
+	}while(nombre.empty());
 }
 
 void deleteTask(Project &toDoList){

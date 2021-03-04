@@ -82,9 +82,7 @@ Date extraerFecha(Date fecha,string str_fecha){
 	fecha.day = stoi(str_day);
 	fecha.month = stoi(str_month);
 	fecha.year =stoi(str_year);
-	
-	
-	
+
 	return (fecha);
 }
 
@@ -99,7 +97,7 @@ bool comprueboDate( Date fecha ){
 		else if (fecha.year%4!=0 && fecha.year%100!=0 &&
 		 fecha.year%400!=0 && fecha.day>28)//no es un año bisiesto
 			verifico=false;
-			}
+	}
 	else {
 		
 		if(fecha.month%2==0 && fecha.month<8 && fecha.day>30) 
@@ -110,7 +108,7 @@ bool comprueboDate( Date fecha ){
 			verifico=false;
 		else if (fecha.month%2!=0 && fecha.month>8 && fecha.day>30)
 			verifico=false;
-			}
+	}
 		}
 	else{
 		verifico=false;
@@ -129,11 +127,24 @@ bool cadenaVacia(string nombre){
 	return (compruebo);
 }
 
-unsigned recorreVectorLists(string nombre, Project proyecto){
+unsigned recorreVectorLists(string nombre, Project  proyecto){
 	bool encontrado=false;
 	unsigned i;
 	for(i=0;i<proyecto.lists.size() && !encontrado;i++){
 		if (nombre==proyecto.lists[i].name)
+			encontrado=true;
+	}
+	if (!encontrado)
+		i=0;
+	
+	return (i);
+}
+
+unsigned recorreVectorTasks(string nombre, Project proyecto,unsigned j){
+	bool encontrado=false;
+	unsigned i;
+	for(i=0;i<proyecto.lists[j].tasks.size() && !encontrado;i++){
+		if (nombre==proyecto.lists[j].tasks[i].name)
 			encontrado=true;
 	}
 	if (!encontrado)
@@ -240,13 +251,18 @@ void deleteTask(Project &toDoList){
 		cout<<LIST_NAME;
 		getline(cin,nombre_list);
 		if(!cadenaVacia(nombre_list)){
-			for(unsigned i=0;i<toDoList.lists.size();i++){
-			if(toDoList.lists[i].name==nombre_list){
-					cout<<TASK_NAME;
-					getline(cin,nombre_task);
-					//for(unsigned j=0;i<toDoList
+			unsigned j= recorreVectorLists(nombre_list, toDoList);
+			if (j!=0){
+				cout<<TASK_NAME;
+				getline(cin,nombre_task);
+				unsigned k = recorreVectorTasks(nombre_task, toDoList,j);
+				if (k!=0)
+					toDoList.lists[j].tasks.erase(toDoList.lists[j].tasks.begin()+k);				
+				else
+				error(ERR_TASK_NAME);
 			}
-			}
+			else 
+				error(ERR_LIST_NAME);
 		}
 	}while(cadenaVacia(nombre_list));
 }

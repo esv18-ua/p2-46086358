@@ -37,6 +37,8 @@ const char LIST_NAME[]="Enter list name: ";
 const char TASK_NAME[]="Enter task name: ";
 const char TASK_DEADLINE[]="Enter deadline: ";
 const char TASK_TIME[]="Enter expected time: ";
+const int MAX_TIME=180;
+const int MIN_TIME=1;
 
 enum Error{
   ERR_OPTION,
@@ -110,10 +112,43 @@ bool comprueboDate( Date fecha ){
 			verifico=false;
 			}
 		}
-	else
+	else{
 		verifico=false;
-			
+		error(ERR_DATE);
+	}	
 	return(verifico);
+}
+
+bool cadenaVacia(string nombre){
+	bool compruebo =true;
+	if (nombre.empty())
+		error(ERR_EMPTY);
+	else
+		compruebo=false;
+	
+	return (compruebo);
+}
+
+unsigned recorreVectorLists(string nombre, Project proyecto){
+	bool encontrado=false;
+	unsigned i;
+	for(i=0;i<proyecto.lists.size() && !encontrado;i++){
+		if (nombre==proyecto.lists[i].name)
+			encontrado=true;
+	}
+	if (!encontrado)
+		i=0;
+	
+	return (i);
+}
+
+bool comprueboTime( int time){
+	bool compruebo =false;
+	if(MIN_TIME<=time && time<=MAX_TIME)
+		compruebo =true;
+	else
+		error(ERR_TIME); 
+	return (compruebo);
 }
 
 void showMainMenu(){
@@ -129,18 +164,16 @@ void showMainMenu(){
 }
 
 void editProject(Project &toDoList){
-	string nombre; //compruebo el string antes de almacenarlo con s
+	string nombre; 
 	do{
 	cout<<PROJECT_NAME;
 	getline(cin,nombre);
-	if (nombre.empty())
-		error(ERR_EMPTY);
-	else{
+	if (!cadenaVacia(nombre)){
 		cout<<PROJECT_DESCRIPTION;
 		getline(cin,toDoList.description);
 		toDoList.name=nombre;
 		}
-	}while(nombre.empty());
+	}while(cadenaVacia(nombre));
 }
 
 void addList(Project &toDoList){
@@ -148,17 +181,14 @@ void addList(Project &toDoList){
 	do{
 	cout<<LIST_NAME;
 	getline(cin,lista.name);
-	if(lista.name.empty())
-		error(ERR_EMPTY);
-	else {
-		for(unsigned i=0;i<toDoList.lists.size();i++){
-		if(toDoList.lists[i].name==lista.name)
-			error(ERR_LIST_NAME);
-		else
+	if(!cadenaVacia(lista.name)){
+		unsigned j= recorreVectorLists(lista.name, toDoList);
+		if (j != 0 )
 			toDoList.lists.push_back(lista);
-			}
+		else 
+			error(ERR_LIST_NAME);
 		}	
-	}while(lista.name.empty());
+	}while(cadenaVacia(lista.name));
 }
 
 void deleteList(Project &toDoList){
@@ -166,17 +196,14 @@ void deleteList(Project &toDoList){
 	do{
 	cout<<LIST_NAME;
 	getline(cin,nombre);
-	if(nombre.empty())
-		error(ERR_EMPTY);
-	else{
-		for(unsigned i=0;i<toDoList.lists.size();i++){
-		if(toDoList.lists[i].name==nombre)
-			toDoList.lists.erase(toDoList.lists.begin()+i);
-		else
+	if(!cadenaVacia(nombre)){
+		unsigned j= recorreVectorLists(nombre, toDoList);
+		if ( j!=0)
 			error(ERR_LIST_NAME);
+		else
+			toDoList.lists.erase(toDoList.lists.begin()+j);
 		}
-	}
-	}while(nombre.empty());
+	}while(cadenaVacia(nombre));
 }
 
 void addTask(Project &toDoList){
@@ -186,32 +213,24 @@ void addTask(Project &toDoList){
 	do{
 	cout<<LIST_NAME;
 	getline(cin,nombre);
-	if(nombre.empty())
-		error(ERR_EMPTY);
-	else{
-		for(unsigned i=0;i<toDoList.lists.size();i++){
-		if(toDoList.lists[i].name==nombre){ //si encuentro la lista con el nombre
+	if(!cadenaVacia(nombre)){
+		unsigned j= recorreVectorLists(nombre, toDoList);
+		if ( j!=0){
 			cout<<TASK_DEADLINE;
 			getline(cin,str_fecha);
-			fecha = extraerFecha(fecha,str_fecha); //llamo a la funcion para extraer los datos
-			if(comprueboDate(fecha)) {
-			cout<<TASK_TIME;
-			cin>>tarea.time;
-			if(1<=tarea.time && tarea.time<=180){
-				tarea.isDone=false;
-				toDoList.lists[i].tasks.push_back(tarea);
+			fecha=extraerFecha(fecha,str_fecha);
+			if(comprueboDate(fecha)){
+				cout<<TASK_TIME;
+				cin>>tarea.time;
+				if(comprueboTime(tarea.time)){
+					tarea.isDone=false;
+					toDoList.lists[j].tasks.push_back(tarea);
+				}
 			}
-			else
-				error(ERR_TIME);
-			}
-			else
-				error(ERR_DATE);
-			
 		}
 		else
-			error(ERR_LIST_NAME);
+			error(ERR_LIST_NAME);	
 		}
-	}
 	}while(nombre.empty());
 }
 
@@ -220,9 +239,7 @@ void deleteTask(Project &toDoList){
 	do{
 		cout<<LIST_NAME;
 		getline(cin,nombre_list);
-		if(nombre_list.empty())
-			error(ERR_EMPTY);
-		else{
+		if(!cadenaVacia(nombre_list)){
 			for(unsigned i=0;i<toDoList.lists.size();i++){
 			if(toDoList.lists[i].name==nombre_list){
 					cout<<TASK_NAME;
@@ -231,7 +248,7 @@ void deleteTask(Project &toDoList){
 			}
 			}
 		}
-}while(nombre_list.empty());
+	}while(cadenaVacia(nombre_list));
 }
 
 void toggleTask(Project &toDoList){

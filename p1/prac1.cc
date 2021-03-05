@@ -367,7 +367,7 @@ void report(const Project &toDoList){
 			fecha_min=compararFechas(toDoList.lists[i].tasks[j].deadline,fecha_min);
 			if (comprueboFechas(toDoList.lists[i].tasks[j].deadline,fecha_min))   
 				nombre=toDoList.lists[i].tasks[j].name;
-		
+			else nombre=nombre;
 		
 	}
 	}

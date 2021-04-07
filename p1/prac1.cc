@@ -71,6 +71,8 @@ void error(Error e){
   }
 }
 
+//Función a la cual se le pasa  el string 
+//correspondiente a deadline de la tarea
 Date extraerFecha(string str_fecha){
 	Date fecha;
 	size_t pos1=str_fecha.find_first_of("/");
@@ -86,7 +88,11 @@ Date extraerFecha(string str_fecha){
 
 	return (fecha);
 }
+//devuelve la fecha en formato date después de ser 
+//convertida de string a int con stoi
 
+//le pasamos la fecha actual de la tarea (fecha) y la fecha anterior almacenada
+//para la funcion report, saber highest priority
 Date compararFechas(Date fecha, Date fecha_min){
 	if(fecha.year<=fecha_min.year){
 		fecha_min.year=fecha.year;
@@ -98,7 +104,9 @@ Date compararFechas(Date fecha, Date fecha_min){
 	}
 	return(fecha_min);
 }
+//devuleve la fecha mínima (la que pondremos en highest priority)
 
+//le  pasamos la fecha actual de la tarea y la fecha  ya almacenada 
 bool comprueboFechas(Date fecha, Date fecha_min){
 	bool comparado =false;
 	if(fecha.year<=fecha_min.year){
@@ -110,8 +118,10 @@ bool comprueboFechas(Date fecha, Date fecha_min){
 	
 	return(comparado);
 }
-		
+//devuelve bool que indica si el nombre de l
+//a tarea es el ya almacenado o el de la tarea actual	
 
+//le pasamos un tipo date, el que hemos obtenido de la funcion extraerFecha
 bool comprueboDate( Date fecha ){
 	bool verifico=true;
 	if (2000<=fecha.year && fecha.year<=2100){ //si el año esta entre 2000 y 2100
@@ -142,16 +152,39 @@ bool comprueboDate( Date fecha ){
 	}	
 	return(verifico);
 }
+//devuelve bool indicando si es una fecha valida, acorde con lo solicitado
 
+//pasamos un string 
 bool cadenaVacia(string nombre){
-	bool compruebo =false;
+	bool compruebo=false;
 	if (nombre.empty())
-	//	error(ERR_EMPTY);
 		compruebo=true;
-	
 	return (compruebo);
 }
+//nos devuelve un bool , true si está vacío y false al contrario
 
+void cadenaVaciaError(bool compruebo){
+	if (compruebo)
+	error(ERR_EMPTY);
+	
+}
+
+unsigned recorreLista(string nombre,Project toDoList){
+	unsigned i=0;
+	bool encontrado=false;
+	for(i=0;i<toDoList.lists.size() && !encontrado;i++){
+		if(nombre==toDoList.lists[i].name)
+			encontrado=true;
+	}
+	i--;
+	if(!encontrado){
+		i=toDoList.lists.size();
+		error(ERR_LIST_NAME);	
+	} 
+	return (i);
+}
+
+//pasamos el time pedido en addtask
 bool comprueboTime( int time){
 	bool compruebo =false;
 	if(MIN_TIME<=time && time<=MAX_TIME)
@@ -160,6 +193,7 @@ bool comprueboTime( int time){
 		error(ERR_TIME); 
 	return (compruebo);
 }
+//devuelve bool, si está dentro del rango solicitado
 
 void showMainMenu(){
   cout << "1- Edit project" << endl
@@ -183,8 +217,8 @@ void editProject(Project &toDoList){
 		getline(cin,toDoList.description);
 		toDoList.name=nombre;
 		}
-	else
-		error(ERR_EMPTY);
+	else 
+		cadenaVaciaError(cadenaVacia(nombre));
 	}while(cadenaVacia(nombre));
 }
 
@@ -211,23 +245,17 @@ void addList(Project &toDoList){
 
 void deleteList(Project &toDoList){
 	string nombre;
-	bool encontrado=false;
 	unsigned i;
 	do{
 	cout<<LIST_NAME;
 	getline(cin,nombre);
 	if(!cadenaVacia(nombre)){
-		for(i=0;i<toDoList.lists.size();i++){
-		if(nombre==toDoList.lists[i].name)
-		encontrado=true;
-			}	
-		if(encontrado) 
+		i =recorreLista(nombre,toDoList);	
+		if(i<toDoList.lists.size())
 			toDoList.lists.erase(toDoList.lists.begin()+i);
-		else 	
-			error(ERR_LIST_NAME);
 		}
 	else
-		error(ERR_EMPTY);
+		cadenaVaciaError(cadenaVacia(nombre));
 	}while(cadenaVacia(nombre));
 }
 
@@ -245,7 +273,7 @@ void addTask(Project &toDoList){
 		encontrado=true;
 		i--; }
 		}
-		if(encontrado){
+		if(encontrado){ 
 			cout<<TASK_NAME;
 			getline(cin,tarea.name);
 			cout<<TASK_DEADLINE;
@@ -326,7 +354,8 @@ void toggleTask(Project &toDoList){
 				else toDoList.lists[i].tasks[j].isDone=true;	
 				}
 			}
-			if(!encontrado2) error(ERR_TASK_NAME);
+			if(!encontrado2) 
+				error(ERR_TASK_NAME);
 		}
 		else 
 			error(ERR_LIST_NAME);
@@ -342,34 +371,41 @@ void report(const Project &toDoList){
 	Date fecha_min={31,12,2100};
 	int total_pendientes=0,total_realizadas=0,total_time_done=0,total_time_left=0;
 	cout<<"Name: "<<toDoList.name<<endl;
-	if (!toDoList.description.empty())
+	if (!cadenaVacia(toDoList.description))
 		cout<<"Description: "<<toDoList.description<<endl;
 	for(unsigned i=0;i<toDoList.lists.size();i++){
 		cout<< toDoList.lists[i].name <<endl;
-		for(unsigned j=0;j<toDoList.lists[i].tasks.size();j++){
-	
-			if(toDoList.lists[i].tasks[j].isDone) {
+		//HASTA AQUI TODO OK
+		
+		for(unsigned j=0;j<toDoList.lists[i].tasks.size();j++){ //muestra tareas pendientes en orden 
+			if(!toDoList.lists[i].tasks[j].isDone){
+			cout<<"[ ] ";
+			total_pendientes++;
+			total_time_left=total_time_left+toDoList.lists[i].tasks[j].time;
+			cout<<"("<<toDoList.lists[i].tasks[j].time<<") ";
+			cout<<toDoList.lists[i].tasks[j].deadline.year<<"-"<<	toDoList.lists[i].tasks[j].deadline.month<<"-"<<toDoList.lists[i].tasks[j].deadline.day<<" : ";
+			if(!toDoList.lists[i].tasks[j].name.empty()) 
+			cout<<toDoList.lists[i].tasks[j].name<<endl;
+
+		}
+		fecha_min=compararFechas(toDoList.lists[i].tasks[j].deadline,fecha_min);
+			if (comprueboFechas(toDoList.lists[i].tasks[j].deadline,fecha_min))   
+				nombre=toDoList.lists[i].tasks[j].name;
+	}
+		for(unsigned j=0;j<toDoList.lists[i].tasks.size();j++){ //muestra tareas realizadas en orden
+			if(toDoList.lists[i].tasks[j].isDone){
 			cout<<"[X] ";
 			total_realizadas++;
 			total_time_done=total_time_done+toDoList.lists[i].tasks[j].time;
-		}
-			else {
-				cout<<"[ ] ";
-				total_pendientes++;
-				total_time_left=total_time_left+toDoList.lists[i].tasks[j].time;
-			}
 			cout<<"("<<toDoList.lists[i].tasks[j].time<<") ";
-			cout<<toDoList.lists[i].tasks[j].deadline.year<<"-"<<
-			toDoList.lists[i].tasks[j].deadline.month<<"-"<<toDoList.lists[i].tasks[j].deadline.day<<" : ";
-			if(!toDoList.lists[i].tasks[j].name.empty()) cout<<toDoList.lists[i].tasks[j].name<<endl;
-				
-			
-			fecha_min=compararFechas(toDoList.lists[i].tasks[j].deadline,fecha_min);
+			cout<<toDoList.lists[i].tasks[j].deadline.year<<"-"<<	toDoList.lists[i].tasks[j].deadline.month<<"-"<<toDoList.lists[i].tasks[j].deadline.day<<" : ";
+			if(!toDoList.lists[i].tasks[j].name.empty()) 
+			cout<<toDoList.lists[i].tasks[j].name<<endl;
+		}
+		fecha_min=compararFechas(toDoList.lists[i].tasks[j].deadline,fecha_min);
 			if (comprueboFechas(toDoList.lists[i].tasks[j].deadline,fecha_min))   
 				nombre=toDoList.lists[i].tasks[j].name;
-			else nombre=nombre;
-		
-	}
+		}
 	}
 	cout<<"Total left: "<<total_pendientes<<" ("<<total_time_left<<" minutes)"<<endl;
 	cout<<"Total done: "<<total_realizadas<<" ("<<total_time_done<<" minutes)"<<endl;

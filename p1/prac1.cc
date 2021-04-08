@@ -94,13 +94,18 @@ Date extraerFecha(string str_fecha){
 //le pasamos la fecha actual de la tarea (fecha) y la fecha anterior almacenada
 //para la funcion report, saber highest priority
 Date compararFechas(Date fecha, Date fecha_min){
-	if(fecha.year<=fecha_min.year){
+	if(fecha.year==fecha_min.year){
 		fecha_min.year=fecha.year;
 		if(fecha.month<=fecha_min.month){
 			fecha_min.month=fecha.month;
 			if(fecha.day<=fecha_min.day)
 			fecha_min.day=fecha.day;
 		}
+	}
+	else if (fecha.year<fecha_min.year){
+		fecha_min.year=fecha.year;
+		fecha_min.month=fecha.month;
+		fecha_min.day=fecha.day;
 	}
 	return(fecha_min);
 }
@@ -133,6 +138,9 @@ bool comprueboDate( Date fecha ){
 		else if (fecha.year%4!=0 && fecha.year%100!=0 &&
 		 fecha.year%400!=0 && fecha.day>28)//no es un año bisiesto
 			verifico=false;
+		else if (fecha.year%4==0 && fecha.year%100==0 &&
+		 fecha.year%400!=0 && fecha.day>28)
+			verifico=false;
 	}
 	else {
 		
@@ -148,7 +156,6 @@ bool comprueboDate( Date fecha ){
 		}
 	else{
 		verifico=false;
-		error(ERR_DATE);
 	}	
 	return(verifico);
 }
@@ -182,6 +189,21 @@ unsigned recorreLista(string nombre,Project toDoList){
 		error(ERR_LIST_NAME);	
 	} 
 	return (i);
+}
+
+unsigned recorreTarea(string nombre,Project toDoList,unsigned posicion2){
+	unsigned posicion;
+	bool encontrado=false;
+	for(posicion=0;posicion<toDoList.lists[posicion2].tasks.size() && !encontrado ;posicion++){
+		if(nombre==toDoList.lists[posicion2].tasks[posicion].name)
+		encontrado=true;
+	}
+	posicion--;
+	if(!encontrado){
+		posicion=toDoList.lists[posicion2].tasks.size();
+		error(ERR_TASK_NAME);
+	}
+	return (posicion);
 }
 
 //pasamos el time pedido en addtask
@@ -299,32 +321,27 @@ void addTask(Project &toDoList){
 
 void deleteTask(Project &toDoList){
 	string nombre_list,nombre_task;
-	bool encontrado=false, encontrado2=false;
-	unsigned i, j;
+	bool encontrado=false;
+	unsigned i, j=0;
 	do{
 		cout<<LIST_NAME;
 		getline(cin,nombre_list);
 		if(!cadenaVacia(nombre_list)){
-			for(i=0;i<toDoList.lists.size() && !encontrado ;i++){
-				if(nombre_list==toDoList.lists[i].name){
-				encontrado=true;
-				i--;}
-			}
-			if (encontrado){
+			i = recorreLista(nombre_list,toDoList);		
+			if (i<toDoList.lists.size()){
 				cout<<TASK_NAME;
 				getline(cin,nombre_task);
-				for(j=0;j<toDoList.lists[i].tasks.size() && !encontrado2;j++){
-				if (nombre_task==toDoList.lists[i].tasks[j].name){
-					encontrado2=true;
-					toDoList.lists[i].tasks.erase(toDoList.lists[i].tasks.begin()+j);			
-					}
-				}	
-					
-				if(!encontrado2)
+			for(j=0;j<toDoList.lists[i].tasks.size() ;j++){
+					if(nombre_task==toDoList.lists[i].tasks[j].name){
+					toDoList.lists[i].tasks.erase(toDoList.lists[i].tasks.begin()+j);	
+					encontrado=true;
+					j--;
+				}
+			}
+				if(!encontrado)
 					error(ERR_TASK_NAME);
 			}
-			else 
-				error(ERR_LIST_NAME);
+		
 		}
 		else 
 			error(ERR_EMPTY);
@@ -386,11 +403,12 @@ void report(const Project &toDoList){
 			cout<<toDoList.lists[i].tasks[j].deadline.year<<"-"<<	toDoList.lists[i].tasks[j].deadline.month<<"-"<<toDoList.lists[i].tasks[j].deadline.day<<" : ";
 			if(!toDoList.lists[i].tasks[j].name.empty()) 
 			cout<<toDoList.lists[i].tasks[j].name<<endl;
-
-		}
-		fecha_min=compararFechas(toDoList.lists[i].tasks[j].deadline,fecha_min);
+			
+			fecha_min=compararFechas(toDoList.lists[i].tasks[j].deadline,fecha_min);
 			if (comprueboFechas(toDoList.lists[i].tasks[j].deadline,fecha_min))   
 				nombre=toDoList.lists[i].tasks[j].name;
+		}
+		
 	}
 		for(unsigned j=0;j<toDoList.lists[i].tasks.size();j++){ //muestra tareas realizadas en orden
 			if(toDoList.lists[i].tasks[j].isDone){
@@ -402,9 +420,9 @@ void report(const Project &toDoList){
 			if(!toDoList.lists[i].tasks[j].name.empty()) 
 			cout<<toDoList.lists[i].tasks[j].name<<endl;
 		}
-		fecha_min=compararFechas(toDoList.lists[i].tasks[j].deadline,fecha_min);
-			if (comprueboFechas(toDoList.lists[i].tasks[j].deadline,fecha_min))   
-				nombre=toDoList.lists[i].tasks[j].name;
+		//fecha_min=compararFechas(toDoList.lists[i].tasks[j].deadline,fecha_min);
+			//if (comprueboFechas(toDoList.lists[i].tasks[j].deadline,fecha_min))   
+				//nombre=toDoList.lists[i].tasks[j].name;
 		}
 	}
 	cout<<"Total left: "<<total_pendientes<<" ("<<total_time_left<<" minutes)"<<endl;

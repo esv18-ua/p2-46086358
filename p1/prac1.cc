@@ -113,14 +113,17 @@ Date compararFechas(Date fecha, Date fecha_min){
 
 //le  pasamos la fecha actual de la tarea y la fecha  ya almacenada 
 bool comprueboFechas(Date fecha, Date fecha_min){
-	bool comparado =false;
-	if(fecha.year<=fecha_min.year){
-		if(fecha.month<=fecha_min.month){
-			if(fecha.day<=fecha_min.day)
-			comparado=true;
+	bool comparado=false;
+	if(fecha.year==fecha_min.year){
+		if(fecha.month==fecha_min.month){
+			 if(fecha.day<fecha_min.day)
+				comparado=true;
 		}
+		else if(fecha.month<fecha_min.month)
+			comparado=true;
 	}
-	
+	else if(fecha.year<fecha_min.year)
+		comparado=true;
 	return(comparado);
 }
 //devuelve bool que indica si el nombre de l
@@ -191,20 +194,6 @@ unsigned recorreLista(string nombre,Project toDoList){
 	return (i);
 }
 
-unsigned recorreTarea(string nombre,Project toDoList,unsigned posicion2){
-	unsigned posicion;
-	bool encontrado=false;
-	for(posicion=0;posicion<toDoList.lists[posicion2].tasks.size() && !encontrado ;posicion++){
-		if(nombre==toDoList.lists[posicion2].tasks[posicion].name)
-		encontrado=true;
-	}
-	posicion--;
-	if(!encontrado){
-		posicion=toDoList.lists[posicion2].tasks.size();
-		error(ERR_TASK_NAME);
-	}
-	return (posicion);
-}
 
 //pasamos el time pedido en addtask
 bool comprueboTime( int time){
@@ -384,7 +373,7 @@ void toggleTask(Project &toDoList){
 }
 
 void report(const Project &toDoList){
-	string nombre;
+	string nombre,nombre_anterior;
 	Date fecha_min={31,12,2100};
 	int total_pendientes=0,total_realizadas=0,total_time_done=0,total_time_left=0;
 	cout<<"Name: "<<toDoList.name<<endl;
@@ -403,11 +392,15 @@ void report(const Project &toDoList){
 			cout<<toDoList.lists[i].tasks[j].deadline.year<<"-"<<	toDoList.lists[i].tasks[j].deadline.month<<"-"<<toDoList.lists[i].tasks[j].deadline.day<<" : ";
 			if(!toDoList.lists[i].tasks[j].name.empty()) 
 			cout<<toDoList.lists[i].tasks[j].name<<endl;
-			
-			fecha_min=compararFechas(toDoList.lists[i].tasks[j].deadline,fecha_min);
-			if (comprueboFechas(toDoList.lists[i].tasks[j].deadline,fecha_min))   
+					
+			if (comprueboFechas(toDoList.lists[i].tasks[j].deadline,fecha_min)) 
 				nombre=toDoList.lists[i].tasks[j].name;
+				
+			fecha_min=compararFechas(toDoList.lists[i].tasks[j].deadline,fecha_min);
+			
 		}
+		
+		
 		
 	}
 		for(unsigned j=0;j<toDoList.lists[i].tasks.size();j++){ //muestra tareas realizadas en orden

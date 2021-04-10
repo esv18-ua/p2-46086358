@@ -12,6 +12,7 @@ const char LIST_NAME[]="Enter list name: ";
 const char TASK_NAME[]="Enter task name: ";
 const char TASK_DEADLINE[]="Enter deadline: ";
 const char TASK_TIME[]="Enter expected time: ";
+const char PROJECT_ID[]="Enter project id: ";
 const int MAX_TIME=180;
 const int MIN_TIME=1;
 const int KMAXNAME=20;
@@ -128,7 +129,7 @@ void showProjectMenu(){
        << "5- Delete task" << endl
        << "6- Toggle task" << endl
        << "7- Report" << endl
-       << "q- Quit" << endl
+       << "b- Back to main menu" << endl
        << "Option: ";
 }
 
@@ -145,8 +146,6 @@ void showMainMenu(){
 		 << "Option: ";
 		
 }
-
-
 
 //Función a la cual se le pasa  el string 
 //correspondiente a deadline de la tarea
@@ -256,21 +255,33 @@ void cadenaVaciaError(bool compruebo){
 	
 }
 
-unsigned recorreLista(string nombre,Project toDoList){
+unsigned recorreLista(string nombre,ToDo toDoProject, unsigned id){
 	unsigned i=0;
 	bool encontrado=false;
-	for(i=0;i<toDoList.lists.size() && !encontrado;i++){
-		if(nombre==toDoList.lists[i].name)
+	for(i=0;i<toDoProject.projects[id].lists.size() && !encontrado;i++){
+		if(nombre==toDoProject.projects[id].lists[i].name)
 			encontrado=true;
 	}
 	i--;
 	if(!encontrado){
-		i=toDoList.lists.size();
+		i=toDoProject.projects[id].lists.size();
 		error(ERR_LIST_NAME);	
 	} 
 	return (i);
 }
 
+unsigned recorreProyecto(string nombre,ToDo toDoProject){
+	unsigned i=0;
+	bool encontrado=false;
+	for(i=0;i<toDoProject.projects.size() && !encontrado;i++){
+		if(nombre==toDoProject.projects[i].name)
+			encontrado=true;
+	}
+	i--;
+	if(!encontrado)
+		i=toDoProject.projects.size();
+	return (i);
+}
 
 //pasamos el time pedido en addtask
 bool comprueboTime( int time){
@@ -283,90 +294,59 @@ bool comprueboTime( int time){
 }
 //devuelve bool, si está dentro del rango solicitado
 
-void addProject(Project &toDoList, ToDo &toDo){
-	cout<<"añade proyecto"<<endl;
-}
-
-void deleteProject(Project &toDoList, ToDo &toDo){
-	cout<<"elimina proyecto"<<endl;
-}
-
-void importProjects(Project &toDoList, ToDo &toDo){
-	cout<<"importa proyectos"<<endl;
-}
-
-void exportProjects(Project &toDoList, ToDo &toDo){
-	cout<< "exporta proyectos"<<endl;
-}
-
-void loadData(Project &toDoList, ToDo &toDo){
-	cout<< "load data"<<endl;
-}
-
-void saveData(Project &toDoList, ToDo &toDo){
-	cout<<"save dtaa"<<endl;
-}
-
-void summary(Project &toDoList, ToDo &toDo){
-	cout<<" summaryy"<<endl;
-}
-
-
-
-
-void editProject(Project &toDoList){
+void editProject(ToDo &toDoProject,unsigned id){
 	string nombre; 
 	do{
 	cout<<PROJECT_NAME;
 	getline(cin,nombre);
 	if (!cadenaVacia(nombre)){
 		cout<<PROJECT_DESCRIPTION;
-		getline(cin,toDoList.description);
-		toDoList.name=nombre;
+		getline(cin,toDoProject.projects[id].description);
+		toDoProject.projects[id].name=nombre;
 		}
 	else 
 		cadenaVaciaError(cadenaVacia(nombre));
 	}while(cadenaVacia(nombre));
 }
 
-void addList(Project &toDoList){
+void addList(ToDo &toDoProject,unsigned id){
 	List lista;
 	bool encontrado=false;
 	do{
 	cout<<LIST_NAME;
 	getline(cin,lista.name);
 	if(!cadenaVacia(lista.name)){
-		for(unsigned i=0;i<toDoList.lists.size();i++){
-		if(lista.name==toDoList.lists[i].name)
+		for(unsigned i=0;i<toDoProject.projects[id].lists.size();i++){
+		if(lista.name==toDoProject.projects[id].lists[i].name)
 		encontrado=true;
 		}	
 		if(encontrado) 
 			error(ERR_LIST_NAME);	
 		else 
-			toDoList.lists.push_back(lista);
+			toDoProject.projects[id].lists.push_back(lista);
 		}	
 		else 
 			error(ERR_EMPTY);
 	}while(cadenaVacia(lista.name));
 }
 
-void deleteList(Project &toDoList){
+void deleteList(ToDo &toDoProject,unsigned id){
 	string nombre;
 	unsigned i;
 	do{
 	cout<<LIST_NAME;
 	getline(cin,nombre);
 	if(!cadenaVacia(nombre)){
-		i =recorreLista(nombre,toDoList);	
-		if(i<toDoList.lists.size())
-			toDoList.lists.erase(toDoList.lists.begin()+i);
+		i =recorreLista(nombre,toDoProject,id);	
+		if(i<toDoProject.projects[id].lists.size())
+			toDoProject.projects[id].lists.erase(toDoProject.projects[id].lists.begin()+i);
 		}
 	else
 		cadenaVaciaError(cadenaVacia(nombre));
 	}while(cadenaVacia(nombre));
 }
 
-void addTask(Project &toDoList){
+void addTask(ToDo &toDoProject,unsigned id){
 	string nombre_list,str_fecha;
 	Task tarea;
 	unsigned i=0;
@@ -375,8 +355,8 @@ void addTask(Project &toDoList){
 	cout<<LIST_NAME;
 	getline(cin,nombre_list);
 	if(!cadenaVacia(nombre_list)){
-		for(i=0;i<toDoList.lists.size() && !encontrado ;i++){
-		if(nombre_list==toDoList.lists[i].name){
+		for(i=0;i<toDoProject.projects[id].lists.size() && !encontrado ;i++){
+		if(nombre_list==toDoProject.projects[id].lists[i].name){
 		encontrado=true;
 		i--; }
 		}
@@ -391,7 +371,7 @@ void addTask(Project &toDoList){
 				cout<<TASK_TIME;
 				cin>>tarea.time;
 				if(comprueboTime(tarea.time))
-				toDoList.lists[i].tasks.push_back(tarea);	
+				toDoProject.projects[id].lists[i].tasks.push_back(tarea);	
 			}
 			else 
 				error(ERR_DATE);
@@ -404,7 +384,7 @@ void addTask(Project &toDoList){
 	}while(nombre_list.empty());
 }
 
-void deleteTask(Project &toDoList){
+void deleteTask(ToDo &toDoProject,unsigned id){
 	string nombre_list,nombre_task;
 	bool encontrado=false;
 	unsigned i, j=0;
@@ -412,13 +392,13 @@ void deleteTask(Project &toDoList){
 		cout<<LIST_NAME;
 		getline(cin,nombre_list);
 		if(!cadenaVacia(nombre_list)){
-			i = recorreLista(nombre_list,toDoList);		
-			if (i<toDoList.lists.size()){
+			i = recorreLista(nombre_list,toDoProject,id);		
+			if (i<toDoProject.projects[id].lists.size()){
 				cout<<TASK_NAME;
 				getline(cin,nombre_task);
-			for(j=0;j<toDoList.lists[i].tasks.size() ;j++){
-					if(nombre_task==toDoList.lists[i].tasks[j].name){
-					toDoList.lists[i].tasks.erase(toDoList.lists[i].tasks.begin()+j);	
+			for(j=0;j<toDoProject.projects[id].lists[i].tasks.size() ;j++){
+					if(nombre_task==toDoProject.projects[id].lists[i].tasks[j].name){
+					toDoProject.projects[id].lists[i].tasks.erase(toDoProject.projects[id].lists[i].tasks.begin()+j);	
 					encontrado=true;
 					j--;
 				}
@@ -433,7 +413,7 @@ void deleteTask(Project &toDoList){
 	}while(cadenaVacia(nombre_list));
 }
 
-void toggleTask(Project &toDoList){
+void toggleTask(ToDo &toDoProject,unsigned id){
 	string nombre_list,nombre_task;
 	bool encontrado=false,encontrado2=false;
 	unsigned i,j;
@@ -441,19 +421,21 @@ void toggleTask(Project &toDoList){
 	cout<<LIST_NAME;
 	getline(cin,nombre_list);
 	if(!cadenaVacia(nombre_list)){
-		for(i=0;i<toDoList.lists.size() && !encontrado;i++){
-		if(nombre_list==toDoList.lists[i].name){
+		for(i=0;i<toDoProject.projects[id].lists.size() && !encontrado;i++){
+		if(nombre_list==toDoProject.projects[id].lists[i].name){
 		encontrado=true;
 		i--;}
 		}
 		if(encontrado){
 			cout<<TASK_NAME;
 			getline(cin,nombre_task);
-			for(j=0;j<toDoList.lists[i].tasks.size();j++){
-			if(nombre_task==toDoList.lists[i].tasks[j].name){
+			for(j=0;j<toDoProject.projects[id].lists[i].tasks.size();j++){
+			if(nombre_task==toDoProject.projects[id].lists[i].tasks[j].name){
 				encontrado2=true;
-				if(toDoList.lists[i].tasks[j].isDone==true) toDoList.lists[i].tasks[j].isDone=false;
-				else toDoList.lists[i].tasks[j].isDone=true;	
+				if(toDoProject.projects[id].lists[i].tasks[j].isDone==true) 
+					toDoProject.projects[id].lists[i].tasks[j].isDone=false;
+				else 
+					toDoProject.projects[id].lists[i].tasks[j].isDone=true;	
 				}
 			}
 			if(!encontrado2) 
@@ -468,46 +450,46 @@ void toggleTask(Project &toDoList){
 	}while(cadenaVacia(nombre_list));
 }
 
-void report(const Project &toDoList){
+void report(const ToDo &toDoProject,unsigned id){
 	string nombre,nombre_anterior;
 	Date fecha_min={31,12,2100};
 	int total_pendientes=0,total_realizadas=0,total_time_done=0,total_time_left=0;
-	cout<<"Name: "<<toDoList.name<<endl;
-	if (!cadenaVacia(toDoList.description))
-		cout<<"Description: "<<toDoList.description<<endl;
-	for(unsigned i=0;i<toDoList.lists.size();i++){
-		cout<< toDoList.lists[i].name <<endl;
-		//HASTA AQUI TODO OK
+	cout<<"Name: "<<toDoProject.projects[id].name<<endl;
+	if (!cadenaVacia(toDoProject.projects[id].description))
+		cout<<"Description: "<<toDoProject.projects[id].description<<endl;
+	for(unsigned i=0;i<toDoProject.projects[id].lists.size();i++){
+		cout<< toDoProject.projects[id].lists[i].name <<endl;
+	
 		
-		for(unsigned j=0;j<toDoList.lists[i].tasks.size();j++){ //muestra tareas pendientes en orden 
-			if(!toDoList.lists[i].tasks[j].isDone){
+		for(unsigned j=0;j<toDoProject.projects[id].lists[i].tasks.size();j++){ //muestra tareas pendientes en orden 
+			if(!toDoProject.projects[id].lists[i].tasks[j].isDone){
 			cout<<"[ ] ";
 			total_pendientes++;
-			total_time_left=total_time_left+toDoList.lists[i].tasks[j].time;
-			cout<<"("<<toDoList.lists[i].tasks[j].time<<") ";
-			cout<<toDoList.lists[i].tasks[j].deadline.year<<"-"<<	toDoList.lists[i].tasks[j].deadline.month<<"-"<<toDoList.lists[i].tasks[j].deadline.day<<" : ";
-			if(!toDoList.lists[i].tasks[j].name.empty()) 
-			cout<<toDoList.lists[i].tasks[j].name<<endl;
+			total_time_left=total_time_left+toDoProject.projects[id].lists[i].tasks[j].time;
+			cout<<"("<<toDoProject.projects[id].lists[i].tasks[j].time<<") ";
+			cout<<toDoProject.projects[id].lists[i].tasks[j].deadline.year<<"-"<< toDoProject.projects[id].lists[i].tasks[j].deadline.month<<"-"<<toDoProject.projects[id].lists[i].tasks[j].deadline.day<<" : ";
+			if(!toDoProject.projects[id].lists[i].tasks[j].name.empty()) 
+			cout<<toDoProject.projects[id].lists[i].tasks[j].name<<endl;
 					
-			if (comprueboFechas(toDoList.lists[i].tasks[j].deadline,fecha_min)) 
-				nombre=toDoList.lists[i].tasks[j].name;
+			if (comprueboFechas(toDoProject.projects[id].lists[i].tasks[j].deadline,fecha_min)) 
+				nombre=toDoProject.projects[id].lists[i].tasks[j].name;
 				
-			fecha_min=compararFechas(toDoList.lists[i].tasks[j].deadline,fecha_min);
+			fecha_min=compararFechas(toDoProject.projects[id].lists[i].tasks[j].deadline,fecha_min);
 			
 		}
 		
 		
 		
 	}
-		for(unsigned j=0;j<toDoList.lists[i].tasks.size();j++){ //muestra tareas realizadas en orden
-			if(toDoList.lists[i].tasks[j].isDone){
+		for(unsigned j=0;j<toDoProject.projects[id].lists[i].tasks.size();j++){ //muestra tareas realizadas en orden
+			if(toDoProject.projects[id].lists[i].tasks[j].isDone){
 			cout<<"[X] ";
 			total_realizadas++;
-			total_time_done=total_time_done+toDoList.lists[i].tasks[j].time;
-			cout<<"("<<toDoList.lists[i].tasks[j].time<<") ";
-			cout<<toDoList.lists[i].tasks[j].deadline.year<<"-"<<	toDoList.lists[i].tasks[j].deadline.month<<"-"<<toDoList.lists[i].tasks[j].deadline.day<<" : ";
-			if(!toDoList.lists[i].tasks[j].name.empty()) 
-			cout<<toDoList.lists[i].tasks[j].name<<endl;
+			total_time_done=total_time_done+toDoProject.projects[id].lists[i].tasks[j].time;
+			cout<<"("<<toDoProject.projects[id].lists[i].tasks[j].time<<") ";
+			cout<<toDoProject.projects[id].lists[i].tasks[j].deadline.year<<"-"<< toDoProject.projects[id].lists[i].tasks[j].deadline.month<<"-"<<toDoProject.projects[id].lists[i].tasks[j].deadline.day<<" : ";
+			if(!toDoProject.projects[id].lists[i].tasks[j].name.empty()) 
+			cout<<toDoProject.projects[id].lists[i].tasks[j].name<<endl;
 		}
 		//fecha_min=compararFechas(toDoList.lists[i].tasks[j].deadline,fecha_min);
 			//if (comprueboFechas(toDoList.lists[i].tasks[j].deadline,fecha_min))   
@@ -519,7 +501,8 @@ void report(const Project &toDoList){
 	if(total_pendientes !=0) cout<<"Highest priority: "<<nombre<<" ("<<fecha_min.year<<"-"<<fecha_min.month<<"-"<<fecha_min.day<<")"<<endl;
 }
 
-void projectMenu(Project &toDoList){
+//main menu de la practica 1
+void oldMenu(ToDo &toDoProject, unsigned id){
 	char option;
 
   do{
@@ -528,34 +511,113 @@ void projectMenu(Project &toDoList){
     cin.get();
     
     switch(option){
-      case '1': editProject(toDoList);
+      case '1': editProject(toDoProject,id);
                 break;
-      case '2': addList(toDoList);
+      case '2': addList(toDoProject,id);
                 break;
-      case '3': deleteList(toDoList);
+      case '3': deleteList(toDoProject,id);
                 break;
-      case '4': addTask(toDoList);
+      case '4': addTask(toDoProject,id);
                 break;
-      case '5': deleteTask(toDoList);
+      case '5': deleteTask(toDoProject,id);
                 break;
-      case '6': toggleTask(toDoList);
+      case '6': toggleTask(toDoProject,id);
                 break;
-      case '7': report(toDoList);
+      case '7': report(toDoProject,id);
                 break;
-      case 'q': break;
+      case 'b': break;
       default: error(ERR_OPTION);
     }
-  }while(option!='q');
+  }while(option!='b');
   
   }
 
+void projectMenu(ToDo &toDoProject){
+	int id2;
+	unsigned i;
+	bool encontrado=false;
+	cout<<PROJECT_ID;
+	cin>>id2;
+	//unsigned id3=id2-1;
+	for(i=0;i<toDoProject.projects.size() && !encontrado ;i++){
+		if(toDoProject.projects[i].id==id2)
+		encontrado=true;
+	}
+	if(encontrado){
+		i--;
+		oldMenu(toDoProject,i);
+	}
+	else 
+		error(ERR_ID);
+}
+
+void addProject(ToDo &toDoProject){
+		Project proyecto;
+		unsigned i;
+	do{
+		cout<<PROJECT_NAME;
+		getline(cin,proyecto.name);
+		if(!cadenaVacia(proyecto.name)){
+			i = recorreProyecto(proyecto.name,toDoProject);
+			if(i==toDoProject.projects.size()){
+			cout<<PROJECT_DESCRIPTION;
+			getline(cin,proyecto.description);
+			proyecto.id=toDoProject.nextId;
+			toDoProject.projects.push_back(proyecto);
+			toDoProject.nextId++;
+		}	
+	}
+		else 
+			cadenaVaciaError(cadenaVacia(proyecto.name));
+	
+}while(cadenaVacia(proyecto.name));
+}
+
+void deleteProject(ToDo &toDoProject){
+	unsigned i;
+	int id;
+	bool encontrado=false;
+	cout<<PROJECT_ID;
+	cin>>id;
+	//id2=id-1;
+	for (i=0;i<toDoProject.projects.size() &&!encontrado;i++){
+		if(toDoProject.projects[i].id==id){
+		toDoProject.projects.erase(toDoProject.projects.begin()+i);
+		encontrado=true;
+		
+	}
+}
+	if (!encontrado)
+		error(ERR_ID);
+}
+
+void importProjects(ToDo &toDoProject){
+	cout<<"importa proyectos"<<endl;
+}
+
+void exportProjects(ToDo &toDoProject){
+	cout<< "exporta proyectos"<<endl;
+}
+
+void loadData(ToDo &toDoProject){
+	cout<< "load data"<<endl;
+}
+
+void saveData(ToDo &toDoProject){
+	cout<<"save dtaa"<<endl;
+}
+
+void summary(ToDo &toDoProject){
+	cout<<" summaryy"<<endl;
+}
+
 int main(){
-  Project toDoList;
-  ToDo toDo;
-  toDo.name="My ToDo List";
-  toDo.nextId=1;
+
+  ToDo toDoProject;
+  toDoProject.name="My ToDo List";
+  toDoProject.nextId=1;
   
-  toDoList.id=1;
+
   char option;
   
   do{
@@ -564,21 +626,21 @@ int main(){
     cin.get();
     
     switch(option){
-      case '1': projectMenu(toDoList);
+      case '1': projectMenu(toDoProject);
                 break;
-      case '2': addProject(toDoList,toDo);
+      case '2': addProject(toDoProject);
                 break;
-      case '3': deleteProject(toDoList,toDo);
+      case '3': deleteProject(toDoProject);
                 break;
-      case '4': importProjects(toDoList,toDo);
+      case '4': importProjects(toDoProject);
                 break;
-      case '5': exportProjects(toDoList,toDo);
+      case '5': exportProjects(toDoProject);
                 break;
-      case '6': loadData(toDoList,toDo);
+      case '6': loadData(toDoProject);
                 break;
-      case '7': saveData(toDoList,toDo);
+      case '7': saveData(toDoProject);
                 break;
-      case '8': summary(toDoList,toDo);
+      case '8': summary(toDoProject);
 				break;
       case 'q': break;
       default: error(ERR_OPTION);

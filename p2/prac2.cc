@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstdlib>
 #include <string>
+#include <fstream> 
 
 using namespace std;
 
@@ -13,6 +14,8 @@ const char TASK_NAME[]="Enter task name: ";
 const char TASK_DEADLINE[]="Enter deadline: ";
 const char TASK_TIME[]="Enter expected time: ";
 const char PROJECT_ID[]="Enter project id: ";
+const char FILE_NAME[]="Enter filename: ";
+const char SAVE_PROJECTS[]="Save all projects [Y/N]?: ";
 const int MAX_TIME=180;
 const int MIN_TIME=1;
 const int KMAXNAME=20;
@@ -457,9 +460,11 @@ void report(const ToDo &toDoProject,unsigned id){
 	cout<<"Name: "<<toDoProject.projects[id].name<<endl;
 	if (!cadenaVacia(toDoProject.projects[id].description))
 		cout<<"Description: "<<toDoProject.projects[id].description<<endl;
+		
+		
 	for(unsigned i=0;i<toDoProject.projects[id].lists.size();i++){
 		cout<< toDoProject.projects[id].lists[i].name <<endl;
-	
+		
 		
 		for(unsigned j=0;j<toDoProject.projects[id].lists[i].tasks.size();j++){ //muestra tareas pendientes en orden 
 			if(!toDoProject.projects[id].lists[i].tasks[j].isDone){
@@ -477,9 +482,7 @@ void report(const ToDo &toDoProject,unsigned id){
 			fecha_min=compararFechas(toDoProject.projects[id].lists[i].tasks[j].deadline,fecha_min);
 			
 		}
-		
-		
-		
+			
 	}
 		for(unsigned j=0;j<toDoProject.projects[id].lists[i].tasks.size();j++){ //muestra tareas realizadas en orden
 			if(toDoProject.projects[id].lists[i].tasks[j].isDone){
@@ -592,11 +595,122 @@ void deleteProject(ToDo &toDoProject){
 }
 
 void importProjects(ToDo &toDoProject){
-	cout<<"importa proyectos"<<endl;
+	string linea,nombre,tiempo,fecha,done;
+	Project proyecto;
+	List lista;
+	Task tarea;
+	ifstream ficheroLec;
+	
+	cout<<FILE_NAME;
+	getline(cin,nombre);
+	
+	ficheroLec.open(nombre); 
+	if(ficheroLec.is_open()){
+		
+		while(getline(ficheroLec,linea)){
+			
+			
+			if(linea.front()=='<'){
+				proyecto.id=toDoProject.nextId;
+				proyecto.description.clear();
+				proyecto.name.clear();
+				proyecto.lists.clear();
+				lista.tasks.clear();
+				lista.name.clear();
+
+			}
+			else if(linea.front()=='#')
+				proyecto.name = linea.substr(1,linea.size()-1);
+			
+			else if(linea.front()=='*')
+				proyecto.description = linea.substr(1,linea.size()-1);
+		
+			else if(linea.front()=='@'){
+			if(!lista.name.empty()){
+					proyecto.lists.push_back(lista);
+				}
+				lista.name = linea.substr(1,linea.size()-1);
+				lista.tasks.clear();
+			}
+			else if(linea.front()=='>')	{
+				if(!lista.name.empty())
+					proyecto.lists.push_back(lista);	
+				
+				toDoProject.projects.push_back(proyecto);
+				toDoProject.nextId++;
+				lista.tasks.clear();
+				proyecto.lists.clear();
+				lista.name.clear();
+				}
+			
+			else { 
+				if(linea.front()=='|'){
+					size_t pos = linea.find_last_of("|");
+					tarea.name.clear();
+					tiempo=linea.substr(pos+1, linea.back());
+					done=linea.substr(pos-1,1);
+					fecha=linea.substr(1,pos-3);
+				}
+				else{
+					size_t pos = linea.find_first_of("|");
+					size_t pos2 = linea.find_last_of("|");
+					size_t pos3 = pos2-pos;
+					tarea.name=linea.substr(0,pos);
+					tiempo=linea.substr(pos2+1,linea.back());
+					done=linea.substr(pos2-1,1);
+					fecha=linea.substr(pos+1,pos3-3);
+				}
+				if(done=="F")
+					tarea.isDone=false;
+				else if(done=="T")
+					tarea.isDone=true;
+			
+				tarea.deadline=extraerFecha(fecha);
+				tarea.time=stoi(tiempo);
+			
+				if(comprueboDate(tarea.deadline) && comprueboTime(tarea.time))
+					lista.tasks.push_back(tarea);
+				
+				else if (!comprueboTime(tarea.time))
+					error(ERR_TIME);	
+				else if(!comprueboDate(tarea.deadline))
+					error(ERR_DATE);
+				
+					
+			}
+		}
+		ficheroLec.close();
+	}
+	else
+		error(ERR_FILE);
 }
 
 void exportProjects(ToDo &toDoProject){
-	cout<< "exporta proyectos"<<endl;
+	string fichero;
+	ofstream ficheroEsc;
+	
+	char option;
+	int id;
+	unsigned i;
+	bool encontrado=false;
+	do{
+		cout<<SAVE_PROJECTS;
+		cin>>option;
+		//if(option=='Y' || option=='y'){
+		if(option=='n' || option=='N'){
+		cout<<PROJECT_ID;
+		cin>>id;
+		for (i=0;i<toDoProject.projects.size() &&!encontrado;i++){
+			if(toDoProject.projects[i].id==id)
+			encontrado=true;
+			}
+		if(!encontrado)
+			error(ERR_ID);
+		}
+	}while (option != 'Y' && option != 'y' && option!='N' && option !='n');
+	
+	cout<<FILE_NAME;
+	getline(cin,fichero);
 }
 
 void loadData(ToDo &toDoProject){

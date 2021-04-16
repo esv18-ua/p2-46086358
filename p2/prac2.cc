@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <string>
 #include <fstream> 
+#include <cstring>
 
 using namespace std;
 
@@ -16,18 +17,22 @@ const char TASK_TIME[]="Enter expected time: ";
 const char PROJECT_ID[]="Enter project id: ";
 const char FILE_NAME[]="Enter filename: ";
 const char SAVE_PROJECTS[]="Save all projects [Y/N]?: ";
+const char CONFIRM_BIN[]="Confirm [Y/N]?: ";
 const int MAX_TIME=180;
 const int MIN_TIME=1;
 const int KMAXNAME=20;
 const int KMAXDESC=40;
 const int KFECHAMAX=2100;
 const int KFECHAMIN=2000;
+const int KNOMFICHERO=80;
 
 struct Date{
   int day;
   int month;
   int year;
 };
+
+
 
 struct Task{
   string name;
@@ -535,6 +540,23 @@ void oldMenu(ToDo &toDoProject, unsigned id){
   
   }
 
+bool checkparameters(int argc,char *argv[],string &fTxt,string &fBin){
+	bool correcto=true;
+	
+	//if(argc!=5) correcto=false
+	for(int i=1;i<argc && correcto;i++){
+		if(strcmp(argv[i],"-i")==0){
+		//si el argumento es -i el siguiente argumento es el nombre del fichero
+		
+		}
+		else if(strcmp(argv[i],"-l")==0){
+			//si el argumento es -l el siguiente es el fichero binarion
+		}
+	}
+	return correcto;
+}
+
+
 void projectMenu(ToDo &toDoProject){
 	int id2;
 	unsigned i;
@@ -594,17 +616,17 @@ void deleteProject(ToDo &toDoProject){
 		error(ERR_ID);
 }
 
-void importProjects(ToDo &toDoProject){
-	string linea,nombre,tiempo,fecha,done;
+void importProjects(ToDo &toDoProject, string iFichero,bool argumento_i){
+	string linea,tiempo,fecha,done;
 	Project proyecto;
 	List lista;
 	Task tarea;
 	ifstream ficheroLec;
-	
-	cout<<FILE_NAME;
-	getline(cin,nombre);
-	
-	ficheroLec.open(nombre); 
+	if(!argumento_i){//si parametro es false, se pide introducir manualmente el nombre del fichero
+  	cout<<FILE_NAME;
+	getline(cin,iFichero);
+}
+	ficheroLec.open(iFichero); 
 	if(ficheroLec.is_open()){
 		
 		while(getline(ficheroLec,linea)){
@@ -646,7 +668,7 @@ void importProjects(ToDo &toDoProject){
 			else { 
 				if(linea.front()=='|'){
 					size_t pos = linea.find_last_of("|");
-					tarea.name.clear();
+					tarea.name=" ";
 					tiempo=linea.substr(pos+1, linea.back());
 					done=linea.substr(pos-1,1);
 					fecha=linea.substr(1,pos-3);
@@ -686,22 +708,24 @@ void importProjects(ToDo &toDoProject){
 }
 
 void exportProjects(ToDo &toDoProject){
-	string fichero;
+	char fichero[KNOMFICHERO];
 	ofstream ficheroEsc;
+	bool opcion=false;
 	
 	char option;
 	int id;
-	unsigned i;
+	unsigned n;
 	bool encontrado=false;
 	do{
 		cout<<SAVE_PROJECTS;
 		cin>>option;
-		//if(option=='Y' || option=='y'){
+		if(option=='Y' || option=='y')
+			opcion=true;
 		if(option=='n' || option=='N'){
 		cout<<PROJECT_ID;
 		cin>>id;
-		for (i=0;i<toDoProject.projects.size() &&!encontrado;i++){
-			if(toDoProject.projects[i].id==id)
+		for (n=0;n<toDoProject.projects.size() &&!encontrado;n++){
+			if(toDoProject.projects[n].id==id)
 			encontrado=true;
 			}
 		if(!encontrado)
@@ -710,30 +734,245 @@ void exportProjects(ToDo &toDoProject){
 	}while (option != 'Y' && option != 'y' && option!='N' && option !='n');
 	
 	cout<<FILE_NAME;
-	getline(cin,fichero);
+	cin>>fichero;
+	
+	ficheroEsc.open(fichero);
+	if(ficheroEsc.is_open()){
+	
+	if(opcion){
+		//almacena tooda la informacion que haya 
+		for(unsigned i=0;i<toDoProject.projects.size();i++){
+			ficheroEsc << "<"<<endl;
+			ficheroEsc <<"#"<<toDoProject.projects[i].name<<endl;
+			if(!toDoProject.projects[i].description.empty())
+			ficheroEsc <<"*"<<toDoProject.projects[i].description<<endl;
+			for(unsigned j=0;j<toDoProject.projects[i].lists.size();j++){
+				ficheroEsc<<"@"<<toDoProject.projects[i].lists[j].name<<endl;
+				for(unsigned k=0;k<toDoProject.projects[i].lists[j].tasks.size();k++){
+				if(toDoProject.projects[i].lists[j].tasks[k].name != " ")
+					ficheroEsc<< toDoProject.projects[i].lists[j].tasks[k].name;
+				ficheroEsc<<"|"<< toDoProject.projects[i].lists[j].tasks[k].deadline.day<<"/"<<toDoProject.projects[i].lists[j].tasks[k].deadline.month<<"/"
+				<<toDoProject.projects[i].lists[j].tasks[k].deadline.year;
+				if(toDoProject.projects[i].lists[j].tasks[k].isDone)
+					ficheroEsc<< "|T|";
+				else
+					ficheroEsc<<"|F|";
+				ficheroEsc<< toDoProject.projects[i].lists[j].tasks[k].time<<endl;
+						}
+					}
+					ficheroEsc <<">"<<endl;
+				}
+			
+			}	
+	if(!opcion){
+		n--;
+		//solo almacena la informacion del proyecto toDoProject.projects[i]
+		ficheroEsc << "<"<<endl;
+		ficheroEsc << "#"<< toDoProject.projects[n].name <<endl;
+		if (!toDoProject.projects[n].description.empty())
+		ficheroEsc << "*" << toDoProject.projects[n].description<<endl;
+		for(unsigned i=0;i<toDoProject.projects[n].lists.size();i++){
+			ficheroEsc << "@" << toDoProject.projects[n].lists[i].name<<endl;
+			for(unsigned j=0;j<toDoProject.projects[n].lists[i].tasks.size();j++){
+				if(toDoProject.projects[n].lists[i].tasks[j].name != " ")
+				ficheroEsc<< toDoProject.projects[n].lists[i].tasks[j].name;
+				ficheroEsc<<"|"<< toDoProject.projects[n].lists[i].tasks[j].deadline.day<<"/"<<toDoProject.projects[n].lists[i].tasks[j].deadline.month<<"/"
+				<<toDoProject.projects[n].lists[i].tasks[j].deadline.year;
+			if(toDoProject.projects[n].lists[i].tasks[j].isDone)
+				ficheroEsc<< "|T|";
+			else
+				ficheroEsc<<"|F|";
+			ficheroEsc<< toDoProject.projects[n].lists[i].tasks[j].time<<endl;
+			}
+		
+		}
+		ficheroEsc <<">"<<endl;
+	}	
+		
+		ficheroEsc.close();
+	}
+else 
+	error(ERR_FILE);
 }
 
-void loadData(ToDo &toDoProject){
-	cout<< "load data"<<endl;
-}
+
+void loadData(ToDo &toDoProject,string lFichero,bool argumento_l){
+	ifstream fichBinario;
+	string fichero;	
+	char op;
+	bool elimino=false;
+	
+	if(!argumento_l){	//el nombre del fichero se pasa manualmente
+	cout<<FILE_NAME;
+	getline(cin,fichero);
+	fichBinario.open(fichero.c_str(),ios::in | ios::binary);
+		if(fichBinario.is_open()){ //si el fichero esta abierto 	
+		do{
+			cout<<CONFIRM_BIN;
+			cin>>op;	
+		}while(op!='n' && op!='N' && op!='y' && op!='Y');
+		
+		if(op=='Y' || op=='y')
+			elimino=true; //confirmo que deseo eliminar los datos
+			}
+				else 
+		error(ERR_FILE);
+		}
+	else{ //el fichero viene dado por los argumentos
+		fichBinario.open(lFichero.c_str(),ios::in | ios::binary);
+		elimino=true;
+		if(!fichBinario.is_open())
+		error(ERR_FILE);
+		}
+		
+		
+		if(elimino){
+		//borrado de todos los datos 
+		toDoProject.projects.clear();
+		toDoProject.name.clear();
+		toDoProject.nextId=1;
+		
+		BinToDo toDoBin;
+		fichBinario.read((char*)&toDoBin, sizeof(toDoBin));
+		toDoProject.name=toDoBin.name; //aqui almaceno el nombre del proyecto 
+		for(unsigned i=0;i<toDoBin.numProjects;i++){
+		BinProject proyectoBin;
+		Project proyecto;
+		fichBinario.read((char*)&proyectoBin,sizeof(proyectoBin));
+		proyecto.name=proyectoBin.name;
+		proyecto.description=proyectoBin.description;
+		proyecto.id=toDoProject.nextId;
+		toDoProject.nextId++;
+		for(unsigned j=0;j<proyectoBin.numLists;j++){
+			BinList listaBin;
+			List lista;
+			fichBinario.read((char*)&listaBin,sizeof(listaBin));
+			lista.name=listaBin.name;
+			for(unsigned k=0;k<listaBin.numTasks;k++){
+				BinTask tareaBin;
+				Task tarea;
+				fichBinario.read((char*)&tareaBin,sizeof(tareaBin));
+				tarea.name=tareaBin.name;
+				tarea.deadline=tareaBin.deadline;
+				tarea.time=tareaBin.time;
+				tarea.isDone=tareaBin.isDone;
+				
+				lista.tasks.push_back(tarea);
+			}
+			proyecto.lists.push_back(lista);
+		}	
+		toDoProject.projects.push_back(proyecto);
+		}
+	}       
+		
+		fichBinario.close();
+	
+
+	}
+
+
 
 void saveData(ToDo &toDoProject){
-	cout<<"save dtaa"<<endl;
-}
+	ofstream fichBinario;
+	string fichero;
+	
+	cout<<FILE_NAME;
+	getline(cin,fichero);
+	
+
+	//ofstream fichBinario(fichero.c_str(),ios::binary);
+	fichBinario.open(fichero.c_str(),ios::binary);
+	if(fichBinario.is_open()){
+		BinToDo toDoBin;
+		strcpy(toDoBin.name,toDoProject.name.c_str());
+		toDoBin.numProjects=toDoProject.projects.size();
+		fichBinario.write((const char *)&toDoBin,sizeof(toDoBin));
+		for(unsigned i=0;i<toDoProject.projects.size();i++){
+			BinProject proyectoBin;
+			strcpy(proyectoBin.name,toDoProject.projects[i].name.c_str());
+			strcpy(proyectoBin.description,toDoProject.projects[i].description.c_str());
+			proyectoBin.numLists=toDoProject.projects[i].lists.size();
+			fichBinario.write((const char *)&proyectoBin,sizeof(proyectoBin));
+			for(unsigned j=0;j<toDoProject.projects[i].lists.size();j++){
+				BinList lista;
+				strcpy(lista.name,toDoProject.projects[i].lists[j].name.c_str());
+				lista.numTasks=toDoProject.projects[i].lists.size();
+				fichBinario.write((const char*)&lista,sizeof(lista));
+				for(unsigned k=0;k<toDoProject.projects[i].lists[j].tasks.size();k++){
+				BinTask tarea;
+				strcpy(tarea.name,toDoProject.projects[i].lists[j].tasks[k].name.c_str());
+				tarea.deadline=toDoProject.projects[i].lists[j].tasks[k].deadline;
+				tarea.isDone=toDoProject.projects[i].lists[j].tasks[k].isDone;
+				tarea.time=toDoProject.projects[i].lists[j].tasks[k].time;
+				fichBinario.write((const char*)&tarea,sizeof(tarea));	
+				}
+				
+			}
+			 
+		}
+		fichBinario.close();
+	}
+	else 
+		error(ERR_FILE);
+		
+	}
+
 
 void summary(ToDo &toDoProject){
-	cout<<" summaryy"<<endl;
+	int total_realizadas=0,total_tareas=0;
+	for(unsigned i=0;i<toDoProject.projects.size();i++){
+		total_realizadas=0;
+		total_tareas=0;
+		cout<<"("<<toDoProject.projects[i].id<<") ";
+		cout<<toDoProject.projects[i].name;
+		for(unsigned j=0;j<toDoProject.projects[i].lists.size();j++){
+			for(unsigned k=0;k<toDoProject.projects[i].lists[j].tasks.size();k++){
+				total_tareas++;
+				if(toDoProject.projects[i].lists[j].tasks[k].isDone)
+					total_realizadas++;
+			}
+		}
+		
+		cout<<"["<<total_realizadas<<"/"<<total_tareas<<"]"<<endl;
+	}
 }
-
-int main(){
+int main(int argc, char *argv[]){
 
   ToDo toDoProject;
   toDoProject.name="My ToDo List";
   toDoProject.nextId=1;
-  
+ 
+	string iFichero,lFichero;
+   bool argumento_i=false;
+   bool argumento_l=false;
+   
+  char option='q';
 
-  char option;
-  
+     for(int i=1; i<argc;i++){
+     if(strcmp(argv[i],"-i")==0 && !argumento_i ){ //solo puede haber un argumento del mismo tipo
+        if(argc==i+1) //El programa finaliza si la opcion no va seguida de un posible fichero
+          error(ERR_ARGS);
+        
+        argumento_i=true;
+        iFichero=argv[i+1];
+		i++;
+     }
+     else if(strcmp(argv[i],"-l")==0 && !argumento_l ){ //solo puede haber un argumento del mismo tipo
+        if(argc==i+1)//El programa finaliza si la opcion no va seguida de un posible fichero
+          error(ERR_ARGS);            
+        argumento_l=true;
+        lFichero=argv[i+1];
+        i++;
+     }
+     else
+       error(ERR_ARGS);  
+   }
+   //ejecucion de los argumentos por orden
+  if(argumento_i)
+	importProjects(toDoProject,iFichero,argumento_i);
+  if(argumento_l)
+    loadData(toDoProject,lFichero,argumento_l);
+ 
   do{
     showMainMenu();
     cin >> option;
@@ -746,11 +985,11 @@ int main(){
                 break;
       case '3': deleteProject(toDoProject);
                 break;
-      case '4': importProjects(toDoProject);
+      case '4': importProjects(toDoProject,iFichero,argumento_i);
                 break;
       case '5': exportProjects(toDoProject);
                 break;
-      case '6': loadData(toDoProject);
+      case '6': loadData(toDoProject,lFichero,argumento_l);
                 break;
       case '7': saveData(toDoProject);
                 break;
@@ -759,7 +998,7 @@ int main(){
       case 'q': break;
       default: error(ERR_OPTION);
     }
-  }while(option!='q');
+  }while(option!='q' );
   
   return 0;    
 }

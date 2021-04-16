@@ -1,4 +1,10 @@
 //DNI 46086358Q SABATER VILLORA, EVA 
+
+
+//funciones añadidas: extraerFecha,compararFechas,compruebodate,
+//cadenaVacia,cadenaVaciaError,recorreLista,recorreProyecto,comprueboTime,oldMenu
+
+
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -8,6 +14,7 @@
 
 using namespace std;
 
+//Constantes
 const char PROJECT_NAME[]="Enter project name: ";
 const char PROJECT_DESCRIPTION[]="Enter project description: ";
 const char LIST_NAME[]="Enter list name: ";
@@ -26,46 +33,41 @@ const int KFECHAMAX=2100;
 const int KFECHAMIN=2000;
 const int KNOMFICHERO=80;
 
+//Esctructuras de datos
 struct Date{
   int day;
   int month;
   int year;
 };
-
-
-
 struct Task{
   string name;
   Date deadline;
   bool isDone;
   int time;
 };
-
 struct List{
   string name;
   vector<Task> tasks;
 };
-
 struct Project{
   int id;
   string name;
   string description;
   vector<List> lists;
 };
-
 struct ToDo{
 	int nextId;
 	string name;
 	vector <Project> projects;
 };
 
+//Estructursa de datos para los ficheros binarios
 struct BinTask{
 	char name[KMAXNAME];
 	Date deadline;
 	bool isDone;
 	int time;
 };
-
 struct BinList{
 	char name[KMAXNAME];
 	unsigned numTasks;
@@ -76,12 +78,12 @@ struct BinProject{
 	char description[KMAXDESC];
 	unsigned numLists;
 };
-
 struct BinToDo{
 	char name[KMAXNAME];
 	unsigned numProjects;
 };
-	
+
+
 enum Error{
   ERR_OPTION,
   ERR_EMPTY,
@@ -257,12 +259,15 @@ bool cadenaVacia(string nombre){
 }
 //nos devuelve un bool , true si está vacío y false al contrario
 
+//muestra mensaje error(ERR_EMPTY)
 void cadenaVaciaError(bool compruebo){
 	if (compruebo)
 	error(ERR_EMPTY);
 	
 }
 
+//recorre una lista, se le pasa el nombre de la lista 
+//que queremos encontrar y el id del proyecto
 unsigned recorreLista(string nombre,ToDo toDoProject, unsigned id){
 	unsigned i=0;
 	bool encontrado=false;
@@ -277,7 +282,9 @@ unsigned recorreLista(string nombre,ToDo toDoProject, unsigned id){
 	} 
 	return (i);
 }
+//devuelve un unsigned con la posicion de la lista con el mismo nombre pedido
 
+//recorre proyecto en busca del nombre solicitado
 unsigned recorreProyecto(string nombre,ToDo toDoProject){
 	unsigned i=0;
 	bool encontrado=false;
@@ -290,6 +297,7 @@ unsigned recorreProyecto(string nombre,ToDo toDoProject){
 		i=toDoProject.projects.size();
 	return (i);
 }
+//le pasamos el nombre del proyecto y devuelve su posicion en un unsigned
 
 //pasamos el time pedido en addtask
 bool comprueboTime( int time){
@@ -498,12 +506,12 @@ void report(const ToDo &toDoProject,unsigned id){
 			cout<<toDoProject.projects[id].lists[i].tasks[j].deadline.year<<"-"<< toDoProject.projects[id].lists[i].tasks[j].deadline.month<<"-"<<toDoProject.projects[id].lists[i].tasks[j].deadline.day<<" : ";
 			if(!toDoProject.projects[id].lists[i].tasks[j].name.empty()) 
 			cout<<toDoProject.projects[id].lists[i].tasks[j].name<<endl;
+			else if(toDoProject.projects[id].lists[i].tasks[j].name.empty())
+				cout<<endl;
 		}
-		//fecha_min=compararFechas(toDoList.lists[i].tasks[j].deadline,fecha_min);
-			//if (comprueboFechas(toDoList.lists[i].tasks[j].deadline,fecha_min))   
-				//nombre=toDoList.lists[i].tasks[j].name;
 		}
 	}
+
 	cout<<"Total left: "<<total_pendientes<<" ("<<total_time_left<<" minutes)"<<endl;
 	cout<<"Total done: "<<total_realizadas<<" ("<<total_time_done<<" minutes)"<<endl;
 	if(total_pendientes !=0) cout<<"Highest priority: "<<nombre<<" ("<<fecha_min.year<<"-"<<fecha_min.month<<"-"<<fecha_min.day<<")"<<endl;
@@ -540,22 +548,6 @@ void oldMenu(ToDo &toDoProject, unsigned id){
   
   }
 
-bool checkparameters(int argc,char *argv[],string &fTxt,string &fBin){
-	bool correcto=true;
-	
-	//if(argc!=5) correcto=false
-	for(int i=1;i<argc && correcto;i++){
-		if(strcmp(argv[i],"-i")==0){
-		//si el argumento es -i el siguiente argumento es el nombre del fichero
-		
-		}
-		else if(strcmp(argv[i],"-l")==0){
-			//si el argumento es -l el siguiente es el fichero binarion
-		}
-	}
-	return correcto;
-}
-
 
 void projectMenu(ToDo &toDoProject){
 	int id2;
@@ -563,7 +555,6 @@ void projectMenu(ToDo &toDoProject){
 	bool encontrado=false;
 	cout<<PROJECT_ID;
 	cin>>id2;
-	//unsigned id3=id2-1;
 	for(i=0;i<toDoProject.projects.size() && !encontrado ;i++){
 		if(toDoProject.projects[i].id==id2)
 		encontrado=true;
@@ -604,7 +595,6 @@ void deleteProject(ToDo &toDoProject){
 	bool encontrado=false;
 	cout<<PROJECT_ID;
 	cin>>id;
-	//id2=id-1;
 	for (i=0;i<toDoProject.projects.size() &&!encontrado;i++){
 		if(toDoProject.projects[i].id==id){
 		toDoProject.projects.erase(toDoProject.projects.begin()+i);
@@ -866,45 +856,43 @@ void loadData(ToDo &toDoProject,string lFichero,bool argumento_l){
 	}       
 		
 		fichBinario.close();
-	
-
 	}
 
-
-
 void saveData(ToDo &toDoProject){
-	ofstream fichBinario;
-	string fichero;
-	
+	//ofstream fichBinario;
+	string fichero;	
 	cout<<FILE_NAME;
 	getline(cin,fichero);
 	
-
-	//ofstream fichBinario(fichero.c_str(),ios::binary);
-	fichBinario.open(fichero.c_str(),ios::binary);
+	ofstream fichBinario(fichero.c_str(),ios::binary);
+	//fichBinario.open(fichero.c_str(),ios::binary);
 	if(fichBinario.is_open()){
 		BinToDo toDoBin;
-		strcpy(toDoBin.name,toDoProject.name.c_str());
+		strncpy(toDoBin.name,toDoProject.name.c_str(),19);
 		toDoBin.numProjects=toDoProject.projects.size();
 		fichBinario.write((const char *)&toDoBin,sizeof(toDoBin));
+		
 		for(unsigned i=0;i<toDoProject.projects.size();i++){
 			BinProject proyectoBin;
-			strcpy(proyectoBin.name,toDoProject.projects[i].name.c_str());
-			strcpy(proyectoBin.description,toDoProject.projects[i].description.c_str());
+			strncpy(proyectoBin.name,toDoProject.projects[i].name.c_str(),19);
+			strncpy(proyectoBin.description,toDoProject.projects[i].description.c_str(),39);
 			proyectoBin.numLists=toDoProject.projects[i].lists.size();
 			fichBinario.write((const char *)&proyectoBin,sizeof(proyectoBin));
+			
 			for(unsigned j=0;j<toDoProject.projects[i].lists.size();j++){
 				BinList lista;
-				strcpy(lista.name,toDoProject.projects[i].lists[j].name.c_str());
+				strncpy(lista.name,toDoProject.projects[i].lists[j].name.c_str(),19);
 				lista.numTasks=toDoProject.projects[i].lists.size();
 				fichBinario.write((const char*)&lista,sizeof(lista));
+				
 				for(unsigned k=0;k<toDoProject.projects[i].lists[j].tasks.size();k++){
 				BinTask tarea;
-				strcpy(tarea.name,toDoProject.projects[i].lists[j].tasks[k].name.c_str());
+				strncpy(tarea.name,toDoProject.projects[i].lists[j].tasks[k].name.c_str(),19);
 				tarea.deadline=toDoProject.projects[i].lists[j].tasks[k].deadline;
 				tarea.isDone=toDoProject.projects[i].lists[j].tasks[k].isDone;
 				tarea.time=toDoProject.projects[i].lists[j].tasks[k].time;
 				fichBinario.write((const char*)&tarea,sizeof(tarea));	
+				
 				}
 				
 			}
@@ -945,34 +933,44 @@ int main(int argc, char *argv[]){
 	string iFichero,lFichero;
    bool argumento_i=false;
    bool argumento_l=false;
-   
+   bool error_arg=false;
+  
   char option='q';
 
-     for(int i=1; i<argc;i++){
-     if(strcmp(argv[i],"-i")==0 && !argumento_i ){ //solo puede haber un argumento del mismo tipo
-        if(argc==i+1) //El programa finaliza si la opcion no va seguida de un posible fichero
+     for(int i=1; i<argc && !error_arg ;i++){                                                  
+     if(strcmp(argv[i],"-i")==0 && !argumento_i){ //solo puede haber un argumento del mismo tipo
+        if(argc==i+1){ //El programa finaliza si la opcion no va seguida de un posible fichero
           error(ERR_ARGS);
-        
+        error_arg=true;
+	}
+        if(!error_arg){
         argumento_i=true;
         iFichero=argv[i+1];
 		i++;
      }
+ }
      else if(strcmp(argv[i],"-l")==0 && !argumento_l ){ //solo puede haber un argumento del mismo tipo
-        if(argc==i+1)//El programa finaliza si la opcion no va seguida de un posible fichero
+        if(argc==i+1 ){//El programa finaliza si la opcion no va seguida de un posible fichero
           error(ERR_ARGS);            
+		error_arg=true;
+	}
+	if(!error_arg){
         argumento_l=true;
         lFichero=argv[i+1];
         i++;
      }
+ }
      else
        error(ERR_ARGS);  
    }
+
    //ejecucion de los argumentos por orden
   if(argumento_i)
 	importProjects(toDoProject,iFichero,argumento_i);
   if(argumento_l)
     loadData(toDoProject,lFichero,argumento_l);
  
+	if(!error_arg){
   do{
     showMainMenu();
     cin >> option;
@@ -999,6 +997,6 @@ int main(int argc, char *argv[]){
       default: error(ERR_OPTION);
     }
   }while(option!='q' );
-  
+}
   return 0;    
 }
